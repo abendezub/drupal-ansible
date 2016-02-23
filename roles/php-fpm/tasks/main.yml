@@ -1,0 +1,32 @@
+ ---
+- name: Install php-fpm and deps 
+  yum: name={{ item }} state=present
+  with_items:
+    - php55w-fpm
+    - php55w-pdo
+    - php55w-common
+    - php55w-mbstring
+    - php55w-cli
+    - php55w
+    - php55w-mysql
+    - php55w-gd
+    - php55w-xml
+    - git
+
+- name: Disable default pool
+  command: mv /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.disabled creates=/etc/php-fpm.d/www.disabled
+  notify: restart php-fpm
+ 
+- name: Copy php-fpm configuration
+  template: src=drupal.conf dest=/etc/php-fpm.d/
+  notify: restart php-fpm
+
+- name: Disable default php.ini configuration
+  command: mv /etc/php.ini /etc/php.disabled creates=/etc/php.disabled
+
+- name: Copy php.ini configuration
+  template: src=php.ini dest=/etc/
+  notify: restart php-fpm
+
+
+

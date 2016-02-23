@@ -1,0 +1,36 @@
+---
+- name: Download Drupal 7.4.2
+  get_url: url=https://ftp.drupal.org/files/projects/drupal-7.42.tar.gz dest=/root/drupal-7.42.tar.gz
+
+- name: Download CiviCRM 
+  get_url: url:https://download.civicrm.org/civicrm-4.7.2-drupal.tar.gz dest=/root/civicrm-4.7.2-drupal.tar.gz
+
+- name: Extract archive Drupal
+  command: chdir=/root/ /bin/tar xvfz drupal-7.42.tar.gz creates=/opt/apps/drupal
+
+- name: Extract archive CiviCRM
+  command: chdir=/root/ /bin/tar xvfz civicrm-4.7.2-drupal.tar.gz creates=/opt/apps/drupal/sites/all/modules/
+
+- name: Create Drupal database
+  mysql_db: name={{ drupal_db_name }} state=present
+
+- name: Create CiviCRM database
+  mysql_db: name={{ civicrm_db_name }} sate=present
+
+- name: Create Drupal database user
+  mysql_user: name={{ drupal_db_user }} password={{ drupal_db_password }} priv={{ drupal_db_name }}.*:ALL host='localhost' state=present
+
+- name: Create CiviCRM database user
+  mysql_user: name={{ civicrm_db_user}} password={{ civicrm_db_password }} priv={{ civicrm_db_name }}.*.ALL host='localhost' state=present
+
+- name: install SEManage
+  yum: pkg=policycoreutils-python state=present
+
+- name: set the SELinux policy for the Drupal directory
+  command: semanage fcontext -a -t httpd_sys_content_t "/opt/apps/drupal(/.*)?"
+
+- name: set the SELinux on all the Files
+  command: restorecon -Rv /opt/apps/drupal
+
+- name: Start php-fpm Service
+  service: name=php-fpm state=started enabled=yes
